@@ -1,4 +1,7 @@
 package group3;
+/*
+Card class holding enum Rank and Suit
+*/
 
 public class Card {
 
