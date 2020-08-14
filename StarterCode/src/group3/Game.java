@@ -1,58 +1,165 @@
-/**
- * SYST 17796 Project Base code.
- * Students can modify and extend to implement their game.
- * Add your name as an author and the date!
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
 package group3;
 
-import java.util.ArrayList;
-
 /**
- * The class that models your game. You should create a more specific child of this class and instantiate the methods
- * given.
  *
- * @author dancye
- * @author Paul Bonenfant Jan 2020
+ * @author hoantran <Jean>
  */
-public abstract class Game {
+public class Game {
 
-    private final String name;//the title of the game
-    private ArrayList<Player> players;// the players of the game
+    GroupOfCards playingDeck = new GroupOfCards();
+    GroupOfCards playerCards = new GroupOfCards();
+    GroupOfCards dealerCards = new GroupOfCards();
+    
+    private double playerMoney = 100.0;
+    private double playerBet = 0.0;
 
-    public Game(String name) {
-        this.name = name;
-        players = new ArrayList();
+    public Game() {
+
+    }
+    
+    /*
+    Set welcome/title message
+    */
+    public String setTitle() {
+        return ("Welcome to BlackJack!");
     }
 
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
+    public Game(GroupOfCards playingDeck, GroupOfCards playerCards, GroupOfCards dealerCards,
+            double playerMoney, double playerBet) {
+        this.dealerCards = dealerCards;
+        this.playerCards = dealerCards;
+        this.playingDeck = playingDeck;
+        this.playerMoney = playerMoney;
+        this.playerBet = playerBet;
     }
 
-    /**
-     * @return the players of this game
-     */
-    public ArrayList<Player> getPlayers() {
-        return players;
+    public double getPlayerMoney() {
+        return playerMoney;
     }
 
-    /**
-     * @param players the players of this game
-     */
-    public void setPlayers(ArrayList<Player> players) {
-        this.players = players;
+    public double getPlayerBet() {
+        return playerBet;
     }
 
-    /**
-     * Play the game. This might be one method or many method calls depending on your game.
-     */
-    public abstract void play();
+    /*
+    Throew IllegalArgumentException if player tries to bet more than what they have
+    */
+    public void setPlayerBet(double playerBet) {
+        if (playerBet > playerMoney) {
+            throw new IllegalArgumentException("You can't bet more than you have");
+        } else {
+        this.playerBet = playerBet;
+        }
+    }
+    
 
-    /**
-     * When the game is over, use this method to declare and display a winning player.
-     */
-    public abstract void declareWinner();
+    public GroupOfCards getPlayingDeck() {
+        return playingDeck;
+    }
 
-}//end class
+    public GroupOfCards getPlayerCards() {
+        return playerCards;
+    }
+
+    public GroupOfCards getDealerCards() {
+        return dealerCards;
+    }
+
+    public void generatePlayDeck() {
+        playingDeck.createFullDeck();
+        playingDeck.shuffle();
+
+    }
+    
+    /*
+    At the beginning of each game
+    Player gets: 2 cards
+    Dealer gets: 2 cards
+    */
+    public void draw() {
+        playerCards.draw(playingDeck);
+        playerCards.draw(playingDeck);
+
+        dealerCards.draw(playingDeck);
+        dealerCards.draw(playingDeck);
+    }
+
+    
+    /*
+    Conditions when user chose 
+    (1) Hit
+    (2) Stand
+    */
+    public boolean hitStand(int response) {
+        boolean endRound = true;
+        // Hit if response = 1
+        if (response == 1) {
+            playerCards.draw(playingDeck);
+            System.out.println("You draw a:" + playerCards.getCard(playerCards.deckSize() - 1).toString());
+            
+            //Bust if they go over 21 when hitting
+            if (playerCards.cardsValue() > 21) {
+                System.out.println("Bust. Currently valued at: " + playerCards.cardsValue());
+                endRound = true;
+            }
+            
+         //Stand if response = 2
+        } else if (response == 2) {
+            //Show Dealer card
+            System.out.println("Dealer Cards:" + dealerCards.toString());
+            
+            //Check if Dealer's value is > Players's
+            if ((dealerCards.cardsValue() > playerCards.cardsValue()) && endRound == false) {
+                System.out.println("Dealer beats you " + dealerCards.cardsValue() + " to " + playerCards.cardsValue());
+                endRound = true;
+            }
+
+            //Display value of dealer
+            System.out.println("Dealers hand value: " + dealerCards.cardsValue());
+        }
+        return endRound;
+    }
+
+    /*
+    End game conditions
+    */
+    public void endGame(boolean endRound, GroupOfCards playingDeck, GroupOfCards playerCards, GroupOfCards dealerCards) {
+        
+        //Player's value > 21 = WIN
+        if ((dealerCards.cardsValue() > 21) && endRound == false) {
+            System.out.println("Dealer Busts. You win!");
+            playerMoney += playerBet;
+            endRound = true;
+            
+        } else if ((playerCards.cardsValue() > dealerCards.cardsValue()) && endRound == false) {
+            System.out.println("You win the hand.");
+            playerMoney += playerBet;
+            endRound = true;
+            
+        //Player's value > Dealer's value
+        } else if ((dealerCards.cardsValue() == playerCards.cardsValue()) && endRound == false) {
+            System.out.println("Push.");
+            endRound = true;
+            
+        //Dealer Wins
+        } else if (endRound == false){
+            System.out.println("Dealer wins.");
+            playerMoney -= playerBet;
+        }
+
+        /*
+        End game, return everything back
+        */
+        playerCards.moveAllToDeck(playingDeck);
+        dealerCards.moveAllToDeck(playingDeck);
+        System.out.println("End of Hand.");
+        System.out.println ("Game over!");
+    }
+
+    
+}
